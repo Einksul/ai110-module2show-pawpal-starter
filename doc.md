@@ -18,23 +18,25 @@ Represents a pet that requires care.
   - `owner` (Owner): A reference to the pet's owner.
 
 ### `TaskRegistry`
-Acts as a collection/manager for all tasks related to a specific pet and owner.
+Acts as a central manager for all tasks related to an owner and all of their pets.
 - **Attributes:**
   - `owner` (Owner): The owner responsible for the tasks.
-  - `pet` (Pet): The pet receiving the care.
-  - `tasks` (List[Task]): A list of care tasks.
+  - `tasks` (List[Task]): A list of all care tasks across all pets.
 - **Methods:**
   - `add_task(task: Task)`: Adds a new care task to the registry.
-  - `get_tasks_by_date(date: String) -> List[Task]`: Returns a list of tasks scheduled for a specific date.
+  - `get_tasks_by_date(date: datetime.date) -> List[Task]`: Returns a list of tasks scheduled for a specific date.
 
 ### `Task`
 Represents an individual pet care action (e.g., walking, feeding).
 - **Attributes:**
+  - `id` (String): A unique identifier for the task (UUID).
   - `name` (String): The name of the care task.
   - `duration_minutes` (int): The expected duration of the task in minutes.
-  - `date` (String): The date the task needs to be performed (Format: YY/MM/DD).
-  - `priority` (int): An integer representing the importance of the task (e.g., 1 is highest priority).
+  - `date` (datetime.date): The date the task needs to be performed.
+  - `time_of_day` (String): The specific time or hour of the day the task should be done (e.g., "08:00 AM" or "14:00").
+  - `priority` (int): An integer representing the importance of the task.
   - `description` (String): A detailed string explaining the task.
+  - `pet` (Pet): A reference to the specific pet this task is for.
 
 ---
 
@@ -45,7 +47,7 @@ Responsible for evaluating tasks against constraints to create a daily plan.
 - **Attributes:**
   - `available_time_minutes` (int): The total time the owner has available to perform tasks.
 - **Methods:**
-  - `generate_plan(registry: TaskRegistry) -> PlanResult`: Evaluates tasks in the registry, filters by date, sorts by priority/duration, and outputs a planned schedule.
+  - `generate_plan(registry: TaskRegistry, date: datetime.date) -> PlanResult`: Evaluates tasks in the registry for a given date, sorts by priority/duration, and outputs a planned schedule.
 
 ### `PlanResult`
 The output of the `SchedulePlanner`. It separates tasks that fit into the available time from those that don't, and provides reasoning.

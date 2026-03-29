@@ -7,10 +7,20 @@
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
 
+There are 4 major classes:
+- Owner: This contains the name of the owner and all the pets they own
+- Pet: This contains teh name of the animal, its name, and the owner it is assigned to 
+- Task: this is a task with the info for the task. The priority, the time of the task, and the description of the task 
+- Task planner: this takes all the task object and has methods to organize and output a schedule 
+
+In the UML document, it is explained the relationships. The pet is owned by the owner, the owner owns the pet, the task scheudler points to the owner and the specific tasks.
+
+
 **b. Design changes**
 
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
+yes, gemini noted that tasks planner was not exposed to all the pets the owner owned, so it would be unable to optimize all tasks that the owner had. Thus, the task planner class was changed to be owned by the owner as well and see all tasks that the owner had. Additionally a unique ID was assigned to the tasks, thus if a specific task, like walking, happens multiple times a day we will be able to differentiate it.
 
 ---
 

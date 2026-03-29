@@ -16,24 +16,26 @@ classDiagram
 
     class TaskRegistry {
         +Owner owner
-        +Pet pet
         +List~Task~ tasks
         +add_task(Task task)
-        +get_tasks_by_date(String date) List~Task~
+        +get_tasks_by_date(Date date) List~Task~
     }
 
     class Task {
+        +String id
         +String name
         +int duration_minutes
-        +String date
+        +Date date
+        +String time_of_day
         +int priority
         +String description
+        +Pet pet
     }
 
     %% Suggested Additions for Scheduling Logic
     class SchedulePlanner {
         +int available_time_minutes
-        +generate_plan(TaskRegistry registry) PlanResult
+        +generate_plan(TaskRegistry registry, Date date) PlanResult
     }
 
     class PlanResult {
@@ -46,7 +48,7 @@ classDiagram
     Pet "1" --> "1" Owner : owned by
     TaskRegistry "1" *--> "*" Task : manages
     TaskRegistry "1" --> "1" Owner : belongs to
-    TaskRegistry "1" --> "1" Pet : is for
+    Task "*" --> "1" Pet : belongs to
     SchedulePlanner ..> TaskRegistry : uses
     SchedulePlanner ..> PlanResult : produces
 ```

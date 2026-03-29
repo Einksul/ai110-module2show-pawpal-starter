@@ -1,4 +1,6 @@
 from typing import List, Optional
+import datetime
+import uuid
 
 class Pet:
     """Represents a pet that requires care."""
@@ -19,25 +21,27 @@ class Owner:
 
 class Task:
     """Represents an individual pet care action."""
-    def __init__(self, name: str, duration_minutes: int, date: str, priority: int, description: str):
+    def __init__(self, name: str, duration_minutes: int, date: datetime.date, time_of_day: str, priority: int, description: str, pet: Pet):
+        self.id = str(uuid.uuid4())
         self.name = name
         self.duration_minutes = duration_minutes
         self.date = date
+        self.time_of_day = time_of_day
         self.priority = priority
         self.description = description
+        self.pet = pet
 
 class TaskRegistry:
-    """Acts as a collection/manager for all tasks related to a specific pet and owner."""
-    def __init__(self, owner: Owner, pet: Pet):
+    """Acts as a collection/manager for all tasks related to an owner and all their pets."""
+    def __init__(self, owner: Owner):
         self.owner = owner
-        self.pet = pet
         self.tasks: List[Task] = []
 
     def add_task(self, task: Task) -> None:
         """Adds a new care task to the registry."""
         pass
 
-    def get_tasks_by_date(self, date: str) -> List[Task]:
+    def get_tasks_by_date(self, date: datetime.date) -> List[Task]:
         """Returns a list of tasks scheduled for a specific date."""
         pass
 
@@ -53,6 +57,6 @@ class SchedulePlanner:
     def __init__(self, available_time_minutes: int):
         self.available_time_minutes = available_time_minutes
 
-    def generate_plan(self, registry: TaskRegistry, date: str) -> PlanResult:
+    def generate_plan(self, registry: TaskRegistry, date: datetime.date) -> PlanResult:
         """Evaluates tasks, filters by date, sorts by priority/duration, and outputs a planned schedule."""
         pass
