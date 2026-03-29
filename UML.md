@@ -42,11 +42,11 @@ classDiagram
         +String explanation
     }
 
-    Owner "1" -- "*" Pet : owns
-    Pet "1" -- "1" Owner : owned by
-    TaskRegistry "1" *-- "*" Task : manages
-    TaskRegistry "1" -- "1" Owner : belongs to
-    TaskRegistry "1" -- "1" Pet : is for
+    Owner "1" --> "*" Pet : owns
+    Pet "1" --> "1" Owner : owned by
+    TaskRegistry "1" *--> "*" Task : manages
+    TaskRegistry "1" --> "1" Owner : belongs to
+    TaskRegistry "1" --> "1" Pet : is for
     SchedulePlanner ..> TaskRegistry : uses
     SchedulePlanner ..> PlanResult : produces
 ```
