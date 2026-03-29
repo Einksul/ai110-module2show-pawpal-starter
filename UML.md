@@ -30,6 +30,7 @@ classDiagram
         +int priority
         +String description
         +Pet pet
+        +int repeat_every_minutes
     }
 
     %% Suggested Additions for Scheduling Logic

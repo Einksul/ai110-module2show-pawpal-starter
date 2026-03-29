@@ -17,11 +17,14 @@ class Owner:
 
     def add_pet(self, pet: Pet) -> None:
         """Associates a new pet with the owner."""
-        pass
+        self.pets.append(pet)
 
 class Task:
     """Represents an individual pet care action."""
-    def __init__(self, name: str, duration_minutes: int, date: datetime.date, time_of_day: str, priority: int, description: str, pet: Pet):
+    def __init__(self, name: str, duration_minutes: int, date: datetime.date, time_of_day: str, priority: int, description: str, pet: Pet, repeat_every_minutes: Optional[int] = None):
+        if repeat_every_minutes is not None and repeat_every_minutes <= duration_minutes:
+            raise ValueError("Task repetition interval (repeat_every_minutes) must be strictly greater than its duration.")
+            
         self.id = str(uuid.uuid4())
         self.name = name
         self.duration_minutes = duration_minutes
@@ -30,6 +33,7 @@ class Task:
         self.priority = priority
         self.description = description
         self.pet = pet
+        self.repeat_every_minutes = repeat_every_minutes
 
 class TaskRegistry:
     """Acts as a collection/manager for all tasks related to an owner and all their pets."""
@@ -39,11 +43,11 @@ class TaskRegistry:
 
     def add_task(self, task: Task) -> None:
         """Adds a new care task to the registry."""
-        pass
+        self.tasks.append(task)
 
     def get_tasks_by_date(self, date: datetime.date) -> List[Task]:
         """Returns a list of tasks scheduled for a specific date."""
-        pass
+        return [task for task in self.tasks if task.date == date]
 
 class PlanResult:
     """The output of the SchedulePlanner."""

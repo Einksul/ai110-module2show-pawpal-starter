@@ -37,6 +37,7 @@ Represents an individual pet care action (e.g., walking, feeding).
   - `priority` (int): An integer representing the importance of the task.
   - `description` (String): A detailed string explaining the task.
   - `pet` (Pet): A reference to the specific pet this task is for.
+  - `repeat_every_minutes` (Optional[int]): How often the task should repeat in minutes (must be strictly greater than duration).
 
 ---
 
