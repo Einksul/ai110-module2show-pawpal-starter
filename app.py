@@ -7,10 +7,7 @@ st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 # --- Initialize Session State ---
 # This ensures our backend objects persist across Streamlit button clicks and reruns.
 if "system_initialized" not in st.session_state:
-    st.session_state.owner = Owner(name="Default Owner")
-    st.session_state.pet = Pet(name="Default Pet", animal_type="Dog", owner=st.session_state.owner)
-    st.session_state.owner.add_pet(st.session_state.pet)
-    
+    st.session_state.owner = Owner(name="")
     st.session_state.registry = TaskRegistry(owner=st.session_state.owner)
     st.session_state.system_initialized = True
 
@@ -22,69 +19,91 @@ st.divider()
 # --- Section 1: Owner and Pet Info ---
 st.subheader("1. Profile Information")
 
-col1, col2, col3 = st.columns(3)
+col1, col2 = st.columns([1, 2])
 with col1:
-    new_owner_name = st.text_input("Owner name", value=st.session_state.owner.name)
-with col2:
-    new_pet_name = st.text_input("Pet name", value=st.session_state.pet.name)
-with col3:
-    # Set the index based on current pet type
-    species_options = ["Dog", "Cat", "Bird", "Other"]
-    current_species = st.session_state.pet.animal_type
-    species_idx = species_options.index(current_species) if current_species in species_options else 3
-    new_species = st.selectbox("Species", species_options, index=species_idx)
+    new_owner_name = st.text_input("Owner Name", value=st.session_state.owner.name)
+    if new_owner_name != st.session_state.owner.name:
+        st.session_state.owner.name = new_owner_name
 
-# Update backend objects if the text inputs changed
-if new_owner_name != st.session_state.owner.name:
-    st.session_state.owner.name = new_owner_name
-if new_pet_name != st.session_state.pet.name:
-    st.session_state.pet.name = new_pet_name
-if new_species != st.session_state.pet.animal_type:
-    st.session_state.pet.animal_type = new_species
+with col2:
+    st.write("**Manage Pets**")
+    with st.expander("Add a New Pet"):
+        with st.form("add_pet_form"):
+            p_name = st.text_input("Pet Name")
+            p_species = st.selectbox("Species", ["Dog", "Cat", "Bird", "Other"])
+            add_pet_btn = st.form_submit_button("Add Pet")
+            if add_pet_btn:
+                if p_name:
+                    new_pet = Pet(name=p_name, animal_type=p_species, owner=st.session_state.owner)
+                    st.session_state.owner.add_pet(new_pet)
+                    st.success(f"Added {p_name}!")
+                    st.rerun()
+                else:
+                    st.error("Pet name is required.")
+
+    if st.session_state.owner.pets:
+        st.write("Current Pets:")
+        for p in st.session_state.owner.pets:
+            p_col1, p_col2 = st.columns([3, 1])
+            with p_col1:
+                st.info(f"🐾 **{p.name}** ({p.animal_type})")
+            with p_col2:
+                if st.button("Remove", key=f"remove_pet_{p.name}"):
+                    st.session_state.registry.remove_tasks_by_pet(p.name)
+                    st.session_state.owner.remove_pet(p.name)
+                    st.success(f"Removed {p.name} and their tasks.")
+                    st.rerun()
+    else:
+        st.warning("No pets added yet. Please add a pet to assign tasks.")
 
 st.divider()
 
 # --- Section 2: Task Management ---
 st.subheader("2. Manage Tasks")
-st.caption("Add tasks for your pet. They will be saved to your task registry.")
+st.caption("Add tasks for your pets. They will be saved to your task registry.")
 
-with st.form("add_task_form"):
-    t_col1, t_col2 = st.columns(2)
-    with t_col1:
-        task_name = st.text_input("Task Title", placeholder="e.g., Morning Walk")
-        task_date = st.date_input("Date", value=datetime.date.today())
-        task_time = st.time_input("Time of Day", value=datetime.time(8, 0))
-    with t_col2:
-        task_duration = st.number_input("Duration (minutes)", min_value=1, max_value=240, value=30)
-        # We will use 1 (Highest) to 3 (Lowest) for priority internally
-        priority_label = st.selectbox("Priority", ["1 - High", "2 - Medium", "3 - Low"], index=1)
-        task_repeat = st.selectbox("Repeat Every (Days)", [0, 1, 2, 3, 4, 5, 6, 7], index=0, format_func=lambda x: "None" if x == 0 else f"{x} day(s)")
+if not st.session_state.owner.pets:
+    st.warning("Please add at least one pet in Section 1 before adding tasks.")
+else:
+    with st.form("add_task_form"):
+        t_col1, t_col2 = st.columns(2)
+        with t_col1:
+            task_name = st.text_input("Task Title", placeholder="e.g., Morning Walk")
+            task_date = st.date_input("Date", value=datetime.date.today())
+            task_time = st.time_input("Time of Day", value=datetime.time(8, 0))
+            # Pet Selection
+            pet_options = {p.name: p for p in st.session_state.owner.pets}
+            selected_pet_name = st.selectbox("Assign to Pet", options=list(pet_options.keys()))
+        with t_col2:
+            task_duration = st.number_input("Duration (minutes)", min_value=1, max_value=240, value=30)
+            priority_label = st.selectbox("Priority", ["1 - High", "2 - Medium", "3 - Low"], index=1)
+            task_repeat = st.selectbox("Repeat Every (Days)", [0, 1, 2, 3, 4, 5, 6, 7], index=0, format_func=lambda x: "None" if x == 0 else f"{x} day(s)")
 
-    task_desc = st.text_area("Description", placeholder="Optional details...")
-    
-    submit_task = st.form_submit_button("Add Task")
+        task_desc = st.text_area("Description", placeholder="Optional details...")
+        
+        submit_task = st.form_submit_button("Add Task")
 
-    if submit_task:
-        if not task_name:
-            st.error("Please provide a task title.")
-        else:
-            # Parse Priority ("1 - High" -> 1)
-            priority_val = int(priority_label.split(" ")[0])
-            repeat_val = task_repeat if task_repeat > 0 else None
-            
-            # Create actual Task object and add to registry
-            new_task = Task(
-                name=task_name,
-                duration_minutes=int(task_duration),
-                date=task_date,
-                time_of_day=task_time.strftime("%H:%M"),
-                priority=priority_val,
-                description=task_desc,
-                pet=st.session_state.pet,
-                repeat_every_days=repeat_val
-            )
-            st.session_state.registry.add_task(new_task)
-            st.success(f"Added task: {task_name}")
+        if submit_task:
+            if not task_name:
+                st.error("Please provide a task title.")
+            else:
+                priority_val = int(priority_label.split(" ")[0])
+                repeat_val = task_repeat if task_repeat > 0 else None
+                
+                selected_pet = pet_options[selected_pet_name]
+                
+                new_task = Task(
+                    name=task_name,
+                    duration_minutes=int(task_duration),
+                    date=task_date,
+                    time_of_day=task_time.strftime("%H:%M"),
+                    priority=priority_val,
+                    description=task_desc,
+                    pet=selected_pet,
+                    repeat_every_days=repeat_val
+                )
+                st.session_state.registry.add_task(new_task)
+                st.success(f"Added task: {task_name} for {selected_pet.name}")
 
 # Display current tasks from the backend registry
 if st.session_state.registry.tasks:

@@ -19,6 +19,10 @@ class Owner:
         """Associates a new pet with the owner."""
         self.pets.append(pet)
 
+    def remove_pet(self, pet_name: str) -> None:
+        """Removes a pet by name."""
+        self.pets = [p for p in self.pets if p.name.lower() != pet_name.lower()]
+
 class Task:
     """Represents an individual pet care action."""
     def __init__(self, name: str, duration_minutes: int, date: datetime.date, time_of_day: str, priority: int, description: str, pet: Pet, repeat_every_days: Optional[int] = None):
@@ -87,6 +91,10 @@ class TaskRegistry:
     def remove_task(self, task_id: str) -> None:
         """Removes a task from the registry by its ID (useful for cancelling future repeating tasks)."""
         self.tasks = [task for task in self.tasks if task.id != task_id]
+
+    def remove_tasks_by_pet(self, pet_name: str) -> None:
+        """Removes all tasks associated with a specific pet."""
+        self.tasks = [t for t in self.tasks if t.pet.name.lower() != pet_name.lower()]
 
     def clean_up(self) -> None:
         """Removes all completed tasks from the registry."""

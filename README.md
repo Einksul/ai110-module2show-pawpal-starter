@@ -63,3 +63,7 @@ This file tests the following:
 - rescheduling tasks
 
 #### reliability score: 4
+
+
+### Functions
+For more information about the system and functions implemented read doc.md. Additionally, the relationship betweenteh classes are outlined in the UML.md file.
