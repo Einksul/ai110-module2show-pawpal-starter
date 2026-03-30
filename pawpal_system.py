@@ -34,6 +34,34 @@ class Task:
         self.description = description
         self.pet = pet
         self.repeat_every_minutes = repeat_every_minutes
+        self.is_completed = False
+
+    def mark_complete(self, registry: 'TaskRegistry') -> None:
+        """Marks the task as complete and schedules the next occurrence if repeating."""
+        self.is_completed = True
+        
+        if self.repeat_every_minutes is not None:
+            # Parse the time_of_day to perform datetime math. We assume "HH:MM" format.
+            try:
+                time_obj = datetime.datetime.strptime(self.time_of_day, "%H:%M").time()
+            except ValueError:
+                # Fallback to 00:00 if the format doesn't match
+                time_obj = datetime.time(0, 0)
+                
+            current_datetime = datetime.datetime.combine(self.date, time_obj)
+            next_datetime = current_datetime + datetime.timedelta(minutes=self.repeat_every_minutes)
+            
+            new_task = Task(
+                name=self.name,
+                duration_minutes=self.duration_minutes,
+                date=next_datetime.date(),
+                time_of_day=next_datetime.strftime("%H:%M"),
+                priority=self.priority,
+                description=self.description,
+                pet=self.pet,
+                repeat_every_minutes=self.repeat_every_minutes
+            )
+            registry.add_task(new_task)
 
 class TaskRegistry:
     """Acts as a collection/manager for all tasks related to an owner and all their pets."""
@@ -48,6 +76,14 @@ class TaskRegistry:
     def get_tasks_by_date(self, date: datetime.date) -> List[Task]:
         """Returns a list of tasks scheduled for a specific date."""
         return [task for task in self.tasks if task.date == date]
+
+    def remove_task(self, task_id: str) -> None:
+        """Removes a task from the registry by its ID (useful for cancelling future repeating tasks)."""
+        self.tasks = [task for task in self.tasks if task.id != task_id]
+
+    def clean_up(self) -> None:
+        """Removes all completed tasks from the registry."""
+        self.tasks = [task for task in self.tasks if not task.is_completed]
 
 class PlanResult:
     """The output of the SchedulePlanner."""

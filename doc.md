@@ -25,6 +25,8 @@ Acts as a central manager for all tasks related to an owner and all of their pet
 - **Methods:**
   - `add_task(task: Task)`: Adds a new care task to the registry.
   - `get_tasks_by_date(date: datetime.date) -> List[Task]`: Returns a list of tasks scheduled for a specific date.
+  - `remove_task(task_id: String)`: Removes a specific task from the registry by its ID.
+  - `clean_up()`: Removes all tasks that are marked as completed from the registry.
 
 ### `Task`
 Represents an individual pet care action (e.g., walking, feeding).
@@ -38,6 +40,9 @@ Represents an individual pet care action (e.g., walking, feeding).
   - `description` (String): A detailed string explaining the task.
   - `pet` (Pet): A reference to the specific pet this task is for.
   - `repeat_every_minutes` (Optional[int]): How often the task should repeat in minutes (must be strictly greater than duration).
+  - `is_completed` (boolean): Indicates whether the task has been finished.
+- **Methods:**
+  - `mark_complete(registry: TaskRegistry)`: Marks the task as done and, if `repeat_every_minutes` is set, calculates the next occurrence and adds the new task to the given registry.
 
 ---
 

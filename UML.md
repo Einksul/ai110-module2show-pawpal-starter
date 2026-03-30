@@ -19,6 +19,8 @@ classDiagram
         +List~Task~ tasks
         +add_task(Task task)
         +get_tasks_by_date(Date date) List~Task~
+        +remove_task(String task_id)
+        +clean_up()
     }
 
     class Task {
@@ -31,6 +33,8 @@ classDiagram
         +String description
         +Pet pet
         +int repeat_every_minutes
+        +boolean is_completed
+        +mark_complete(TaskRegistry registry)
     }
 
     %% Suggested Additions for Scheduling Logic
