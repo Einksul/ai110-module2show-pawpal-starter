@@ -105,7 +105,7 @@ class SchedulePlanner:
         self.available_time_minutes = available_time_minutes
 
     def generate_plan(self, registry: TaskRegistry, date: datetime.date) -> PlanResult:
-        """Evaluates tasks, filters by date, sorts by priority/duration, and outputs a planned schedule."""
+        """Evaluates tasks, filters by date, and prioritizes based on priority/duration, then time."""
         result = PlanResult()
         
         # 1. Filter tasks for the day
@@ -118,58 +118,61 @@ class SchedulePlanner:
             except ValueError:
                 return 0
 
-        # Sort all daily tasks chronologically by their original requested time
-        pending_tasks = sorted(daily_tasks, key=lambda t: time_to_mins(t.time_of_day))
+        # Sort tasks by priority first, then requested time, then duration (shorter first)
+        # This ensures higher priority tasks get first pick of their slots, 
+        # and for equal priority, earlier requested tasks get processed first.
+        ranked_tasks = sorted(daily_tasks, key=lambda t: (t.priority, time_to_mins(t.time_of_day), t.duration_minutes))
         
-        ready_queue = []
-        current_time_mins = 0
+        occupied_intervals = [] # List of (start, end)
         total_time_used = 0
         
         result.explanation += f"--- Scheduling Plan for {date} ---\n"
         result.explanation += f"Total available free time: {self.available_time_minutes} minutes.\n\n"
+        result.explanation += "Ranking Method:\n"
+        result.explanation += "1. Priority (1 is highest)\n2. Requested Time\n3. Duration (shortest first to maximize efficiency)\n\n"
         
-        while pending_tasks or ready_queue:
-            # If no tasks are ready, jump time forward to the next pending task
-            if not ready_queue:
-                next_task_time = time_to_mins(pending_tasks[0].time_of_day)
-                if current_time_mins < next_task_time:
-                    current_time_mins = next_task_time
-                    
-            # Move all tasks whose requested time has arrived into the ready queue
-            while pending_tasks and time_to_mins(pending_tasks[0].time_of_day) <= current_time_mins:
-                ready_queue.append(pending_tasks.pop(0))
+        for task in ranked_tasks:
+            requested_start = time_to_mins(task.time_of_day)
+            
+            # Find the first available start time >= requested_start
+            found_slot = False
+            potential_start = requested_start
+            
+            while not found_slot and potential_start + task.duration_minutes <= 24 * 60:
+                conflict = False
+                for start, end in occupied_intervals:
+                    # Check overlap
+                    if not (potential_start + task.duration_minutes <= start or potential_start >= end):
+                        conflict = True
+                        potential_start = end # Skip past the conflict
+                        break
                 
-            # Sort the ready queue by priority (1 is highest), then duration (shortest first)
-            # This ensures we ONLY use priority to resolve actual timing conflicts
-            ready_queue.sort(key=lambda t: (t.priority, t.duration_minutes))
-            
-            task = ready_queue.pop(0)
-            
+                if not conflict:
+                    found_slot = True
+
             # Check global time constraint
-            if total_time_used + task.duration_minutes > self.available_time_minutes:
+            if not found_slot or total_time_used + task.duration_minutes > self.available_time_minutes:
                 result.unscheduled_tasks.append(task)
-                result.explanation += f"❌ '{task.name}': Skipped. Not enough total free time left (Needs {task.duration_minutes}m, only {self.available_time_minutes - total_time_used}m available).\n"
+                reason = "Not enough total free time left" if total_time_used + task.duration_minutes > self.available_time_minutes else "Pushed past midnight due to conflicts"
+                result.explanation += f"❌ '{task.name}' (Priority {task.priority}):\n   Skipped. {reason}.\n\n"
                 continue
                 
-            # Check if pushing back puts it past midnight
-            if current_time_mins + task.duration_minutes > 24 * 60:
-                result.unscheduled_tasks.append(task)
-                result.explanation += f"❌ '{task.name}': Skipped. Pushed past midnight due to conflicts.\n"
-                continue
-                
-            # Schedule it! We dynamically add `scheduled_time` so we don't mutate the original `time_of_day`
-            task.scheduled_time = f"{current_time_mins // 60:02d}:{current_time_mins % 60:02d}"
+            # Schedule it!
+            scheduled_start_mins = potential_start
+            task.scheduled_time = f"{scheduled_start_mins // 60:02d}:{scheduled_start_mins % 60:02d}"
+            
             result.scheduled_tasks.append(task)
+            occupied_intervals.append((scheduled_start_mins, scheduled_start_mins + task.duration_minutes))
+            occupied_intervals.sort() # Keep sorted for efficiency if needed
             total_time_used += task.duration_minutes
             
             if task.scheduled_time != task.time_of_day:
-                result.explanation += f"✅ '{task.name}' (Priority {task.priority}): Scheduled for {task.scheduled_time} (Pushed back from {task.time_of_day}).\n"
+                result.explanation += f"✅ '{task.name}' (Priority {task.priority}):\n   Scheduled for {task.scheduled_time} (Pushed back from {task.time_of_day}).\n\n"
             else:
-                result.explanation += f"✅ '{task.name}' (Priority {task.priority}): Scheduled at requested time {task.scheduled_time}.\n"
-                
-            # Advance current time to the end of this task
-            current_time_mins += task.duration_minutes
+                result.explanation += f"✅ '{task.name}' (Priority {task.priority}):\n   Scheduled at requested time {task.scheduled_time}.\n\n"
 
-        result.explanation += f"\nTotal time scheduled: {total_time_used} minutes."
+        # Final sort for display
+        result.scheduled_tasks.sort(key=lambda t: time_to_mins(getattr(t, 'scheduled_time', t.time_of_day)))
+        result.explanation += f"Total time scheduled: {total_time_used} minutes."
         
         return result
