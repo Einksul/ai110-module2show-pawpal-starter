@@ -21,9 +21,9 @@ class Owner:
 
 class Task:
     """Represents an individual pet care action."""
-    def __init__(self, name: str, duration_minutes: int, date: datetime.date, time_of_day: str, priority: int, description: str, pet: Pet, repeat_every_minutes: Optional[int] = None):
-        if repeat_every_minutes is not None and repeat_every_minutes <= duration_minutes:
-            raise ValueError("Task repetition interval (repeat_every_minutes) must be strictly greater than its duration.")
+    def __init__(self, name: str, duration_minutes: int, date: datetime.date, time_of_day: str, priority: int, description: str, pet: Pet, repeat_every_days: Optional[int] = None):
+        if repeat_every_days is not None and repeat_every_days <= 0:
+            raise ValueError("Task repetition interval (repeat_every_days) must be greater than 0.")
             
         self.id = str(uuid.uuid4())
         self.name = name
@@ -33,33 +33,25 @@ class Task:
         self.priority = priority
         self.description = description
         self.pet = pet
-        self.repeat_every_minutes = repeat_every_minutes
+        self.repeat_every_days = repeat_every_days
         self.is_completed = False
 
     def mark_complete(self, registry: 'TaskRegistry') -> None:
         """Marks the task as complete and schedules the next occurrence if repeating."""
         self.is_completed = True
         
-        if self.repeat_every_minutes is not None:
-            # Parse the time_of_day to perform datetime math. We assume "HH:MM" format.
-            try:
-                time_obj = datetime.datetime.strptime(self.time_of_day, "%H:%M").time()
-            except ValueError:
-                # Fallback to 00:00 if the format doesn't match
-                time_obj = datetime.time(0, 0)
-                
-            current_datetime = datetime.datetime.combine(self.date, time_obj)
-            next_datetime = current_datetime + datetime.timedelta(minutes=self.repeat_every_minutes)
+        if self.repeat_every_days is not None:
+            next_date = self.date + datetime.timedelta(days=self.repeat_every_days)
             
             new_task = Task(
                 name=self.name,
                 duration_minutes=self.duration_minutes,
-                date=next_datetime.date(),
-                time_of_day=next_datetime.strftime("%H:%M"),
+                date=next_date,
+                time_of_day=self.time_of_day,
                 priority=self.priority,
                 description=self.description,
                 pet=self.pet,
-                repeat_every_minutes=self.repeat_every_minutes
+                repeat_every_days=self.repeat_every_days
             )
             registry.add_task(new_task)
 

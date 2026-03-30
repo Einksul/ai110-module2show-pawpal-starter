@@ -45,7 +45,7 @@ def main():
         priority=1,
         description="Give Buddy his dry food.",
         pet=pet1,
-        repeat_every_minutes=720 # Repeats every 12 hours
+        repeat_every_days=1 # Repeats every 1 day
     )
 
     # Task for Luna (Cat) - grooming
@@ -66,7 +66,7 @@ def main():
 
     print(f"\nTasks in Registry (Total: {len(registry.tasks)}):")
     for t in registry.tasks:
-        repeat_str = f" (Repeats every {t.repeat_every_minutes}m)" if t.repeat_every_minutes else ""
+        repeat_str = f" (Repeats every {t.repeat_every_days} days)" if t.repeat_every_days else ""
         print(f" - [{t.id[:8]}...] {t.pet.name}: {t.name} at {t.time_of_day} ({t.duration_minutes}m) - Priority {t.priority}{repeat_str}")
 
     # 5. Test completing a repeating task
@@ -79,7 +79,7 @@ def main():
 
     print(f"\nTasks in Registry after cleanup (Total: {len(registry.tasks)}):")
     for t in registry.tasks:
-        repeat_str = f" (Repeats every {t.repeat_every_minutes}m)" if t.repeat_every_minutes else ""
+        repeat_str = f" (Repeats every {t.repeat_every_days} days)" if t.repeat_every_days else ""
         print(f" - [{t.id[:8]}...] {t.pet.name}: {t.name} on {t.date} at {t.time_of_day} ({t.duration_minutes}m){repeat_str}")
 
 if __name__ == "__main__":

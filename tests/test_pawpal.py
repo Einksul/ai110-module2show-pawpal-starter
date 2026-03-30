@@ -57,7 +57,7 @@ class TestPawPalSystem(unittest.TestCase):
             priority=1,
             description="Give Buddy his dry food.",
             pet=self.pet1,
-            repeat_every_minutes=720 # Repeats every 12 hours
+            repeat_every_days=1 # Repeats daily
         )
         self.registry.add_task(task_repeat)
         self.assertEqual(len(self.registry.tasks), 1)
@@ -70,10 +70,10 @@ class TestPawPalSystem(unittest.TestCase):
         self.assertTrue(self.registry.tasks[0].is_completed)
         self.assertFalse(self.registry.tasks[1].is_completed)
         
-        # Verify the new task's time is exactly 12 hours later
+        # Verify the new task's date is exactly 1 day later
         new_task = self.registry.tasks[1]
-        self.assertEqual(new_task.time_of_day, "21:00")
-        self.assertEqual(new_task.date, self.today)
+        self.assertEqual(new_task.time_of_day, "09:00")
+        self.assertEqual(new_task.date, self.today + datetime.timedelta(days=1))
 
         # Clean up completed tasks
         self.registry.clean_up()

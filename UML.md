@@ -32,7 +32,7 @@ classDiagram
         +int priority
         +String description
         +Pet pet
-        +int repeat_every_minutes
+        +int repeat_every_days
         +boolean is_completed
         +mark_complete(TaskRegistry registry)
     }

@@ -39,10 +39,10 @@ Represents an individual pet care action (e.g., walking, feeding).
   - `priority` (int): An integer representing the importance of the task.
   - `description` (String): A detailed string explaining the task.
   - `pet` (Pet): A reference to the specific pet this task is for.
-  - `repeat_every_minutes` (Optional[int]): How often the task should repeat in minutes (must be strictly greater than duration).
+  - `repeat_every_days` (Optional[int]): How often the task should repeat in days (must be greater than 0).
   - `is_completed` (boolean): Indicates whether the task has been finished.
 - **Methods:**
-  - `mark_complete(registry: TaskRegistry)`: Marks the task as done and, if `repeat_every_minutes` is set, calculates the next occurrence and adds the new task to the given registry.
+  - `mark_complete(registry: TaskRegistry)`: Marks the task as done and, if `repeat_every_days` is set, calculates the next occurrence and adds the new task to the given registry.
 
 ---
 
