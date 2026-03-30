@@ -19,6 +19,8 @@ classDiagram
         +List~Task~ tasks
         +add_task(Task task)
         +get_tasks_by_date(Date date) List~Task~
+        +filter_tasks(Date date, String pet_name, int priority) List~Task~
+        +sort_tasks_by_time(List~Task~ tasks) List~Task~
         +remove_task(String task_id)
         +clean_up()
     }

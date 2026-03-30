@@ -120,9 +120,53 @@ schedule_date = st.date_input("Date to Schedule", value=datetime.date.today(), k
 available_time = st.number_input("Available Free Time (minutes)", min_value=10, max_value=1440, value=120)
 
 if st.button("Generate Schedule"):
-    # Soon this will actually call the SchedulePlanner logic
-    st.warning("Not implemented yet! We need to write the `generate_plan` logic in `pawpal_system.py` next.")
+    st.session_state.planner = SchedulePlanner(available_time_minutes=int(available_time))
+    st.session_state.schedule_result = st.session_state.planner.generate_plan(st.session_state.registry, schedule_date)
+    st.session_state.last_planned_date = schedule_date
+    st.session_state.total_planned_tasks = len(st.session_state.schedule_result.scheduled_tasks)
+    st.session_state.completed_planned_tasks = 0
+    st.session_state.last_completed_task_name = None
+
+if "schedule_result" in st.session_state:
+    result = st.session_state.schedule_result
     
-    # st.session_state.planner = SchedulePlanner(available_time_minutes=int(available_time))
-    # result = st.session_state.planner.generate_plan(st.session_state.registry, schedule_date)
-    # ... display result ...
+    st.markdown("### 📋 Daily Plan")
+    
+    has_tasks_to_show = bool(result.scheduled_tasks) or st.session_state.get("completed_planned_tasks", 0) > 0
+    
+    if has_tasks_to_show:
+        if st.session_state.get("last_completed_task_name"):
+            st.success(f"Completed '{st.session_state.last_completed_task_name}' ({st.session_state.completed_planned_tasks}/{st.session_state.total_planned_tasks})")
+        else:
+            st.success(f"Successfully scheduled {len(result.scheduled_tasks)} tasks!")
+            
+        for t in result.scheduled_tasks:
+            disp_time = getattr(t, 'scheduled_time', t.time_of_day)
+            
+            p_col1, p_col2 = st.columns([4, 1])
+            with p_col1:
+                st.write(f"- **{disp_time}**: {t.name} ({t.duration_minutes}m) - Pet: {t.pet.name} (Priority {t.priority})")
+            with p_col2:
+                if st.button("Mark Complete", key=f"plan_complete_{t.id}"):
+                    t.mark_complete(st.session_state.registry)
+                    st.session_state.registry.clean_up()
+                    
+                    st.session_state.completed_planned_tasks = st.session_state.get("completed_planned_tasks", 0) + 1
+                    st.session_state.last_completed_task_name = t.name
+                    
+                    # Re-generate the schedule to reflect the removed/completed task!
+                    st.session_state.schedule_result = st.session_state.planner.generate_plan(
+                        st.session_state.registry, 
+                        st.session_state.last_planned_date
+                    )
+                    st.rerun()
+    else:
+        st.warning("No tasks could be scheduled.")
+        
+    if result.unscheduled_tasks:
+        st.error(f"{len(result.unscheduled_tasks)} tasks could not fit:")
+        for t in result.unscheduled_tasks:
+            st.write(f"- {t.name} (Priority {t.priority}) - Pet: {t.pet.name}")
+            
+    st.markdown("### 🧠 How it was planned")
+    st.text(result.explanation)
