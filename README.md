@@ -71,4 +71,7 @@ For more information about the system and functions implemented read doc.md. Add
 ### Images:
 
 ![](images/1.png)
+![](images/2.png)
+![](images/3.png)
+![](images/4.png)
 
