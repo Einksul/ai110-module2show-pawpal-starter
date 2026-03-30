@@ -36,6 +36,7 @@ classDiagram
         +Pet pet
         +int repeat_every_days
         +boolean is_completed
+        +String scheduled_time
         +mark_complete(TaskRegistry registry)
     }
 

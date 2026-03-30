@@ -43,6 +43,7 @@ Represents an individual pet care action (e.g., walking, feeding).
   - `pet` (Pet): A reference to the specific pet this task is for.
   - `repeat_every_days` (Optional[int]): How often the task should repeat in days (must be greater than 0).
   - `is_completed` (boolean): Indicates whether the task has been finished.
+  - `scheduled_time` (String): A dynamic attribute assigned by the `SchedulePlanner` representing the actual resolved start time, preventing mutation of the original requested `time_of_day`.
 - **Methods:**
   - `mark_complete(registry: TaskRegistry)`: Marks the task as done and, if `repeat_every_days` is set, calculates the next occurrence and adds the new task to the given registry.
 
@@ -55,7 +56,7 @@ Responsible for evaluating tasks against constraints to create a daily plan.
 - **Attributes:**
   - `available_time_minutes` (int): The total time the owner has available to perform tasks.
 - **Methods:**
-  - `generate_plan(registry: TaskRegistry, date: datetime.date) -> PlanResult`: Evaluates tasks in the registry for a given date, sorts by priority/duration, and outputs a planned schedule.
+  - `generate_plan(registry: TaskRegistry, date: datetime.date) -> PlanResult`: Processes tasks in a chronological "ready queue" simulation. It steps through time, pulling tasks when their requested `time_of_day` arrives. Conflicts are resolved by prioritizing the highest priority and shortest duration tasks, dynamically pushing lower-priority tasks to the next available gap without mutating their original data.
 
 ### `PlanResult`
 The output of the `SchedulePlanner`. It separates tasks that fit into the available time from those that don't, and provides reasoning.
