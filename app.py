@@ -88,8 +88,9 @@ with st.form("add_task_form"):
 
 # Display current tasks from the backend registry
 if st.session_state.registry.tasks:
-    st.write("**Current Tasks in Registry:**")
-    for t in st.session_state.registry.tasks:
+    sorted_all_tasks = st.session_state.registry.sort_tasks_by_time(st.session_state.registry.tasks)
+    st.write("**Current Tasks in Registry (Sorted):**")
+    for t in sorted_all_tasks:
         repeat_badge = f" 🔁 {t.repeat_every_days} day(s)" if t.repeat_every_days else ""
         with st.expander(f"[{t.priority}] {t.name} on {t.date} at {t.time_of_day} ({t.duration_minutes}m) {repeat_badge}"):
             st.write(f"**For Pet:** {t.pet.name}")
@@ -112,8 +113,54 @@ else:
 
 st.divider()
 
-# --- Section 3: Scheduling ---
-st.subheader("3. Build Daily Schedule")
+# --- Section 3: Task Registry Overview ---
+st.subheader("3. Task Registry Overview")
+st.caption("Professionally view, sort, and filter all your saved tasks.")
+
+f_col1, f_col2, f_col3 = st.columns(3)
+with f_col1:
+    filter_by_date = st.checkbox("Filter by Date")
+    view_date = st.date_input("Select Date", value=datetime.date.today()) if filter_by_date else None
+with f_col2:
+    prio_filter = st.selectbox("Filter by Priority", ["All", "1 - High", "2 - Medium", "3 - Low"])
+    view_prio = int(prio_filter.split(" ")[0]) if prio_filter != "All" else None
+with f_col3:
+    view_pet = st.text_input("Filter by Pet Name", value="", placeholder="e.g., Buddy")
+
+# Use our new filter and sort logic!
+filtered_tasks = st.session_state.registry.filter_tasks(
+    date=view_date,
+    pet_name=view_pet if view_pet else None,
+    priority=view_prio
+)
+sorted_filtered_tasks = st.session_state.registry.sort_tasks_by_time(filtered_tasks)
+
+if sorted_filtered_tasks:
+    m_col1, m_col2 = st.columns([1, 4])
+    with m_col1:
+        st.metric("Tasks Found", len(sorted_filtered_tasks))
+    with m_col2:
+        st.success(f"Successfully filtered and sorted {len(sorted_filtered_tasks)} task(s) based on your criteria.")
+    
+    table_data = []
+    for t in sorted_filtered_tasks:
+        table_data.append({
+            "Date": t.date,
+            "Time": t.time_of_day,
+            "Task": t.name,
+            "Pet": t.pet.name,
+            "Priority": t.priority,
+            "Duration (min)": t.duration_minutes,
+            "Repeats": f"Every {t.repeat_every_days} day(s)" if t.repeat_every_days else "Never"
+        })
+    st.table(table_data)
+else:
+    st.warning("No tasks match your current filters. Try adjusting them or add a new task above.")
+
+st.divider()
+
+# --- Section 4: Scheduling ---
+st.subheader("4. Build Daily Schedule")
 st.caption("Plan your day based on available time.")
 
 schedule_date = st.date_input("Date to Schedule", value=datetime.date.today(), key="schedule_date")
@@ -164,9 +211,16 @@ if "schedule_result" in st.session_state:
         st.warning("No tasks could be scheduled.")
         
     if result.unscheduled_tasks:
-        st.error(f"{len(result.unscheduled_tasks)} tasks could not fit:")
+        st.warning(f"⚠️ {len(result.unscheduled_tasks)} tasks could not fit in the available time:")
+        unscheduled_data = []
         for t in result.unscheduled_tasks:
-            st.write(f"- {t.name} (Priority {t.priority}) - Pet: {t.pet.name}")
+            unscheduled_data.append({
+                "Task": t.name,
+                "Pet": t.pet.name,
+                "Priority": t.priority,
+                "Duration": f"{t.duration_minutes}m"
+            })
+        st.table(unscheduled_data)
             
     st.markdown("### 🧠 How it was planned")
-    st.text(result.explanation)
+    st.info(result.explanation)

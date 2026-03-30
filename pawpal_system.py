@@ -81,8 +81,8 @@ class TaskRegistry:
         return filtered
 
     def sort_tasks_by_time(self, tasks: List[Task]) -> List[Task]:
-        """Sorts a given list of tasks chronologically by their time_of_day."""
-        return sorted(tasks, key=lambda t: t.time_of_day)
+        """Sorts a given list of tasks chronologically by date and then time_of_day."""
+        return sorted(tasks, key=lambda t: (t.date, t.time_of_day))
 
     def remove_task(self, task_id: str) -> None:
         """Removes a task from the registry by its ID (useful for cancelling future repeating tasks)."""

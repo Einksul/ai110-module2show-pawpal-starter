@@ -41,3 +41,25 @@ pip install -r requirements.txt
 5. Add tests to verify key behaviors.
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
+
+### Scheduling
+A scheudler is provided that takes all the tasks created for a certain day a returns a detailed breakdown
+of the daily plan. The scheduler optimizes for priority and time. If the tasks occupies an open slot (no conflicts during its entire duration) then the scheduler slots the task into its specified timeslot. When 
+there are task conflicts it prioritizes higher priority tasks, as well as shorter tasks. When a conflict arrises it tries to push back the task to the next available slot, similar to linear probing. If no available timeslots exist the task is discarded and a warning message appears.
+
+### Testing
+To run the given unit test run:
+```bash
+python -m unittest tests/test_pawpal.py
+```
+This file tests the following:
+- populating owner object
+- populating pet obeject
+- populating task object
+- optimizing for shorter time tasks
+- optimizing for higher priority tasks
+- discarded invalid tasks
+- discarding tasks that cannot be completed that day 
+- rescheduling tasks
+
+#### reliability score: 4

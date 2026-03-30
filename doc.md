@@ -26,7 +26,7 @@ Acts as a central manager for all tasks related to an owner and all of their pet
   - `add_task(task: Task)`: Adds a new care task to the registry.
   - `get_tasks_by_date(date: datetime.date) -> List[Task]`: Returns a list of tasks scheduled for a specific date.
   - `filter_tasks(date: datetime.date, pet_name: String, priority: int) -> List[Task]`: Returns a list of tasks filtered by the provided optional criteria.
-  - `sort_tasks_by_time(tasks: List[Task]) -> List[Task]`: Sorts a given list of tasks chronologically by their `time_of_day`.
+  - `sort_tasks_by_time(tasks: List[Task]) -> List[Task]`: Sorts a given list of tasks chronologically by their `date` and then their `time_of_day`.
   - `remove_task(task_id: String)`: Removes a specific task from the registry by its ID.
   - `clean_up()`: Removes all tasks that are marked as completed from the registry.
 
