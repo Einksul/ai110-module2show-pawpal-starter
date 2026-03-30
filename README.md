@@ -67,3 +67,8 @@ This file tests the following:
 
 ### Functions
 For more information about the system and functions implemented read doc.md. Additionally, the relationship betweenteh classes are outlined in the UML.md file.
+
+### Images:
+
+![](images/1.png)
+
